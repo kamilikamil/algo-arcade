@@ -3,6 +3,7 @@ import unittest
 
 import agent_loop as al
 import context_window as cw
+import token_bucket as tb
 
 
 class ContextWindow(unittest.TestCase):
@@ -38,6 +39,29 @@ class AgentLoop(unittest.TestCase):
 
     def test_denied_tool_never_runs(self):
         self.assertNotIn("delete_file", al.ALLOWED)
+
+
+class TokenBucketLevel(unittest.TestCase):
+    def test_level(self):
+        t = tb.level()["totals"]
+        self.assertEqual((t["sent"], t["through"], t["bounced"], t["burst_through"], t["waited"]), (7, 7, 3, 5, 2.0))
+
+    def test_refill_is_continuous_and_capped(self):
+        b = tb.TokenBucket(5, 1.0)
+        for _ in range(5):
+            self.assertTrue(b.allow(0.0)[0])
+        self.assertEqual(b.allow(0.0), (False, 1))
+        self.assertTrue(b.allow(1.0)[0])
+        b.refill(100.0)
+        self.assertEqual(b.coins, 5)
+
+    def test_retry_after(self):
+        self.assertEqual(tb.retry_after_seconds("120"), 120)
+        self.assertEqual(tb.retry_after_seconds("Wed, 21 Oct 2015 07:28:00 GMT", now=1445412470), 10)
+        replies = iter([(429, {"retry-after": "2"}, ""), (200, {}, "ok")])
+        waits = []
+        self.assertEqual(tb.call_with_retry(lambda: next(replies), sleep=waits.append)[0], 200)
+        self.assertEqual(waits, [2])
 
 
 if __name__ == "__main__":

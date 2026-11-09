@@ -85,6 +85,7 @@ shows. See [world2/README.md](world2/README.md).
 cd world2
 python3 context_window.py           # level 2-1: why your AI "forgets"
 python3 agent_loop.py               # level 2-2: how an AI agent touches your files
+python3 token_bucket.py             # level 2-3: why your API says 429
 ```
 
 ## How it works
