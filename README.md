@@ -23,6 +23,7 @@ Python 3.8 or newer, nothing to install.
 | 3 | `insertion_sort.py` | keep the left part sorted; each new value steps left until its neighbour is not bigger |
 | 4 | `merge_sort.py` | merge sorted squads of 1 into 2, 4, 8: take the smaller front each time; needs a second row |
 | 5 | `quick_sort.py` | pick a pivot, move everything smaller to its left; the pivot is now final; repeat on both sides |
+| 6 | `heap_sort.py` | build a pyramid where every boss is taller than its two guards; the front boss is the tallest: send it to the end, repeat |
 
 Every sorting level starts from the same row, `[8, 2, 5, 1, 3, 7, 4, 6]`, so you can compare the scores:
 
@@ -33,6 +34,7 @@ Every sorting level starts from the same row, `[8, 2, 5, 1, 3, 7, 4, 6]`, so you
 | insertion sort | 18 | 13 | O(n²) | O(n), already sorted | O(1) |
 | merge sort | 24 | 24 writes | O(n log n) | O(n log n) | O(n) |
 | quick sort | 15 | 15 | O(n log n), O(n²) on a sorted row | O(n log n) | O(log n) |
+| heap sort | 24 | 17 | O(n log n), on every row | O(n log n) | O(1) |
 
 In plain words: all three get slow on big rows. 10 times more numbers takes about 100 times longer, because the work
 grows with the square of the row (that is what O(n²) means). None of them needs extra memory: they sort inside the
@@ -47,6 +49,8 @@ Merge sort is about 250 times faster than bubble sort here, but it needs a secon
 extra memory). Its work grows with n log n: 10 times more numbers is only about 13 times more work.
 Quick sort is the fastest here (0.011 s) with almost no extra memory, but it has a weak spot: with the last value as
 pivot, an already sorted row is its worst case (100 sorted numbers: 4,950 compares, shuffled: about 700).
+Heap sort (0.025 s) is a little slower than both, but it has neither cost: no extra row, and no weak spot. Every row,
+sorted or not, takes about the same work.
 
 More levels are on the way.
 
