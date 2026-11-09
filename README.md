@@ -74,6 +74,18 @@ always the cheapest path.
 
 More levels are on the way.
 
+## World 2: how AI and dev systems work
+
+The `world2/` folder holds a second world: not sorting or searching, but the systems you use every day (the context
+window of a chat model, an AI agent's tool calls, rate limits), each played as a dungeon level. Same rule as World 1:
+one small Python file per level, standard library only, runs offline, and the file prints the same numbers the level
+shows. See [world2/README.md](world2/README.md).
+
+```sh
+cd world2
+python3 context_window.py           # level 2-1: why your AI "forgets"
+```
+
 ## How it works
 
 `arcade.py` runs the algorithm with `sys.settrace` and records every line it executes, with the list and the
