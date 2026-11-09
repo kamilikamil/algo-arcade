@@ -32,6 +32,10 @@ LEVEL = Level(
     highlight=lambda v: [v["j"], v["min_i"]] if "j" in v and "min_i" in v else [],
     # the left end is final: one more value after every round
     locked=lambda v, n: list(range(0, v.get("i", 0))),
+    # how the work grows with n: compares grow with n squared; already sorted input costs the same; sorts in place
+    time="O(n²)",
+    best="O(n²)",
+    memory="O(1)",
     counters={
         "compares": lambda line: line.startswith("if row[j] < row[min_i]"),
         "swaps": lambda line: line.startswith("row[i], row[min_i] ="),

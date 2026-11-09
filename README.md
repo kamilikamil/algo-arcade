@@ -24,11 +24,15 @@ Python 3.8 or newer, nothing to install.
 
 Every sorting level starts from the same row, `[8, 2, 5, 1, 3, 7, 4, 6]`, so you can compare the scores:
 
-| level | compares | swaps |
-|---|---|---|
-| bubble sort | 22 | 13 |
-| selection sort | 28 | 5 |
-| insertion sort | 18 | 13 |
+| level | compares | swaps | time | best case | extra memory |
+|---|---|---|---|---|---|
+| bubble sort | 22 | 13 | O(n²) | O(n), already sorted | O(1) |
+| selection sort | 28 | 5 | O(n²) | O(n²), always | O(1) |
+| insertion sort | 18 | 13 | O(n²) | O(n), already sorted | O(1) |
+
+Time is how the work grows as the row gets longer: with O(n²), 4 times more items means about 16 times more
+compares (try `python3 -m unittest`, which measures it). Memory is the extra space the level needs besides the row
+itself: O(1) means a few variables, whatever the size.
 
 More levels are on the way.
 

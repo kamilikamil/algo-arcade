@@ -31,6 +31,10 @@ LEVEL = Level(
     highlight=lambda v: [v["j"] - 1, v["j"]] if v.get("j", 0) > 0 else [],
     # nothing is final until the end: a later value can still step in front of any of them
     locked=lambda v, n: [],
+    # how the work grows with n: compares grow with n squared; already sorted input costs n; sorts in place
+    time="O(n²)",
+    best="O(n)",
+    memory="O(1)",
     counters={
         "compares": lambda line: line.startswith("if row[j - 1] <= row[j]"),
         "swaps": lambda line: line.startswith("row[j - 1], row[j] ="),

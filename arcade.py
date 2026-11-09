@@ -30,6 +30,7 @@ class Level:
     locked     (vars, n) -> list of indexes already in their final place (lit green).
     counters   name -> test on a stripped source line; the counter goes up each time such a line runs.
     view       how the data is drawn: "towers" (a list of numbers). Graph and grid levels add their own view.
+    time, best, memory  how the work grows with n items: typical and worst running time, best case, extra memory.
     """
     func: Callable
     number: int
@@ -39,6 +40,9 @@ class Level:
     locked: Callable[[dict, int], List[int]] = lambda v, n: []
     counters: Dict[str, Callable[[str], bool]] = field(default_factory=dict)
     view: str = "towers"
+    time: str = ""
+    best: str = ""
+    memory: str = ""
 
 
 def record(func, data):
@@ -113,7 +117,8 @@ VIEWS = {"towers": draw_towers}
 
 def frame(level, lines, step, totals, hot, done):
     score = "   ".join(f"{name.upper()} {n:03d}" for name, n in totals.items())
-    out = ["\033[H\033[2J", f"  ALGO ARCADE  LEVEL {level.number}  {level.title}   {score}", ""]
+    grow = f"   TIME {level.time}  BEST {level.best}  MEMORY {level.memory}" if level.time else ""
+    out = ["\033[H\033[2J", f"  ALGO ARCADE  LEVEL {level.number}  {level.title}   {score}{grow}", ""]
     out += VIEWS[level.view](level, lines, step, totals, hot, done)
     out.append("")
     for n, text in enumerate(lines):
@@ -159,6 +164,7 @@ def levels():
 
 if __name__ == "__main__":
     print("\n  ALGO ARCADE levels:\n")
+    print(f"  {'':>2}  {'':<20} {'time':<11} {'best':<11} {'memory':<8}")
     for number, name, level in levels():
-        print(f"  {number:>2}  {level.title:<20} python3 {name}")
+        print(f"  {number:>2}  {level.title:<20} {level.time:<11} {level.best:<11} {level.memory:<8} python3 {name}")
     print()
