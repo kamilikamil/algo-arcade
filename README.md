@@ -19,6 +19,14 @@ Python 3.8 or newer, nothing to install.
 | level | file | the rule in one line |
 |---|---|---|
 | 1 | `bubble_sort.py` | compare two neighbours, swap if the left one is bigger; stop when a whole pass makes no swap |
+| 2 | `selection_sort.py` | find the smallest unplaced value, swap it to the front; every value moves at most once |
+
+Every sorting level starts from the same row, `[8, 2, 5, 1, 3, 7, 4, 6]`, so you can compare the scores:
+
+| level | compares | swaps |
+|---|---|---|
+| bubble sort | 22 | 13 |
+| selection sort | 28 | 5 |
 
 More levels are on the way.
 
