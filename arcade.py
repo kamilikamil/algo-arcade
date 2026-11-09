@@ -13,6 +13,8 @@ Python 3.8+, standard library only.
 """
 import importlib
 import inspect
+import random
+import statistics
 import sys
 import time
 from dataclasses import dataclass, field
@@ -30,7 +32,8 @@ class Level:
     locked     (vars, n) -> list of indexes already in their final place (lit green).
     counters   name -> test on a stripped source line; the counter goes up each time such a line runs.
     view       how the data is drawn: "towers" (a list of numbers). Graph and grid levels add their own view.
-    time, best, memory  how the work grows with n items: typical and worst running time, best case, extra memory.
+    time, best, memory  how the work grows with n items, for developers (big O): running time, best case, extra memory.
+    extra_memory        the same extra memory in plain words, for everyone ("none" or "a second row").
     """
     func: Callable
     number: int
@@ -43,6 +46,7 @@ class Level:
     time: str = ""
     best: str = ""
     memory: str = ""
+    extra_memory: str = ""
 
 
 def record(func, data):
@@ -147,6 +151,27 @@ def play(level, args=None):
     print(f"\n  STAGE CLEAR   {data} -> {list(result)}   {score}\n")
 
 
+def race(level, n, runs=3, seed=42):
+    """Seconds to sort n shuffled numbers with the plain function (no recording), median of runs. Your computer's
+    speed changes the numbers, not the shape: 10 times more items costs about 100 times more for an n squared level."""
+    data = random.Random(seed).sample(range(n * 10), n)
+    times = []
+    for _ in range(runs):
+        row = list(data)
+        start = time.perf_counter()
+        level.func(row)
+        times.append(time.perf_counter() - start)
+    return statistics.median(times)
+
+
+def speed_bars(seconds_for_10000):
+    """1 to 5 SPEED bars from the time to sort 10,000 numbers: the same scale for every level."""
+    for bars, limit in ((5, 0.05), (4, 0.2), (3, 1.0), (2, 3.0)):
+        if seconds_for_10000 <= limit:
+            return bars
+    return 1
+
+
 def levels():
     """Every LEVEL in the .py files next to this one, by level number."""
     here = Path(__file__).resolve().parent
@@ -163,8 +188,16 @@ def levels():
 
 
 if __name__ == "__main__":
+    if "--race" in sys.argv:
+        n = int(sys.argv[sys.argv.index("--race") + 1])
+        print(f"\n  RACE: sorting {n:,} shuffled numbers on this computer (median of 3 runs)\n")
+        for number, name, level in levels():
+            seconds = race(level, n)
+            print(f"  {number:>2}  {level.title:<20} {seconds:8.3f} s   extra memory: {level.extra_memory}")
+        print()
+        sys.exit()
     print("\n  ALGO ARCADE levels:\n")
     print(f"  {'':>2}  {'':<20} {'time':<11} {'best':<11} {'memory':<8}")
     for number, name, level in levels():
         print(f"  {number:>2}  {level.title:<20} {level.time:<11} {level.best:<11} {level.memory:<8} python3 {name}")
-    print()
+    print("\n  Race them on your computer: python3 arcade.py --race 10000\n")

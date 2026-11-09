@@ -35,6 +35,7 @@ LEVEL = Level(
     time="O(n²)",
     best="O(n)",
     memory="O(1)",
+    extra_memory="none",
     counters={
         "compares": lambda line: line.startswith("if row[j - 1] <= row[j]"),
         "swaps": lambda line: line.startswith("row[j - 1], row[j] ="),
