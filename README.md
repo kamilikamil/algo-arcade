@@ -84,6 +84,7 @@ shows. See [world2/README.md](world2/README.md).
 ```sh
 cd world2
 python3 context_window.py           # level 2-1: why your AI "forgets"
+python3 agent_loop.py               # level 2-2: how an AI agent touches your files
 ```
 
 ## How it works

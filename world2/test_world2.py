@@ -1,6 +1,7 @@
 """Checks for the World 2 levels: python3 -m unittest -v (inside world2/)."""
 import unittest
 
+import agent_loop as al
 import context_window as cw
 
 
@@ -26,6 +27,17 @@ class ContextWindow(unittest.TestCase):
         for m in ["aaaaaaaa", "bbbbbbbb", "cccc"]:
             bag.add(m)
         self.assertEqual(cw.answer(bag, "?"), "SAM")
+
+
+class AgentLoop(unittest.TestCase):
+    def test_level(self):
+        d = al.level()
+        self.assertEqual([e["event"] for e in d["log"]], ["ran", "ran", "ran", "ran", "denied", "done"])
+        self.assertEqual([e["result"] for e in d["log"] if e.get("tool") == "run_tests"], ["1 FAILED", "PASSED"])
+        self.assertTrue(d["totals"]["prod_db_safe"])
+
+    def test_denied_tool_never_runs(self):
+        self.assertNotIn("delete_file", al.ALLOWED)
 
 
 if __name__ == "__main__":
