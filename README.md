@@ -20,6 +20,7 @@ Python 3.8 or newer, nothing to install.
 |---|---|---|
 | 1 | `bubble_sort.py` | compare two neighbours, swap if the left one is bigger; stop when a whole pass makes no swap |
 | 2 | `selection_sort.py` | find the smallest unplaced value, swap it to the front; every value moves at most once |
+| 3 | `insertion_sort.py` | keep the left part sorted; each new value steps left until its neighbour is not bigger |
 
 Every sorting level starts from the same row, `[8, 2, 5, 1, 3, 7, 4, 6]`, so you can compare the scores:
 
@@ -27,6 +28,7 @@ Every sorting level starts from the same row, `[8, 2, 5, 1, 3, 7, 4, 6]`, so you
 |---|---|---|
 | bubble sort | 22 | 13 |
 | selection sort | 28 | 5 |
+| insertion sort | 18 | 13 |
 
 More levels are on the way.
 
