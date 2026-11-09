@@ -54,7 +54,7 @@ LEVEL = Level(
     demo=[8, 2, 5, 1, 3, 7, 4, 6],
     highlight=lambda v: [...],          # indexes being looked at, read from the loop variables
     locked=lambda v, n: [...],          # indexes already in their final place
-    counters={"compares": lambda line: line.startswith("if row[j] < row[smallest]")},
+    counters={"compares": lambda line: line.startswith("if row[j] < row[min_i]")},
 )
 
 if __name__ == "__main__":
