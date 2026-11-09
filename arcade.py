@@ -33,7 +33,8 @@ class Level:
     counters   name -> test on a stripped source line; the counter goes up each time such a line runs.
     view       how the data is drawn: "towers" (a list of numbers). Graph and grid levels add their own view.
     time, best, memory  how the work grows with n items, for developers (big O): running time, best case, extra memory.
-    extra_memory        the same extra memory in plain words, for everyone ("none" or "a second row").
+    extra_memory        the same extra memory in plain words, for everyone ("none" or "+1 row").
+    lists      names of list variables to record as well (for example the left and right copies of merge sort).
     """
     func: Callable
     number: int
@@ -47,9 +48,10 @@ class Level:
     best: str = ""
     memory: str = ""
     extra_memory: str = ""
+    lists: tuple = ()
 
 
-def record(func, data):
+def record(func, data, lists=()):
     """Run func on a copy of data. Return one step per executed line of func:
     {"line": line number inside func (0 = the def line), "row": the list at that moment,
      "vars": the function's numbers and flags at that moment, "event": "line" or "return"}.
@@ -66,7 +68,8 @@ def record(func, data):
             steps.append({
                 "line": frame.f_lineno - code.co_firstlineno,
                 "row": list(row),
-                "vars": {k: v for k, v in loc.items() if isinstance(v, (int, bool))},
+                "vars": {k: (list(v) if isinstance(v, list) else v) for k, v in loc.items()
+                         if isinstance(v, (int, bool)) or (k in lists and isinstance(v, list))},
                 "event": event,
             })
         return watch
@@ -139,7 +142,7 @@ def play(level, args=None):
         speed = float(args[k + 1])
         del args[k:k + 2]
     data = [int(x) for x in args] or level.demo
-    steps, result = record(level.func, data)
+    steps, result = record(level.func, data, level.lists)
     lines = source_lines(level.func)
     totals = counts(level, steps)
     for s, t in zip(steps, totals):

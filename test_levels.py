@@ -35,6 +35,8 @@ class TestLevels(unittest.TestCase):
                 ratio = work(list(range(400, 0, -1))) / work(list(range(100, 0, -1)))
                 if level.time == "O(n²)":
                     self.assertTrue(14 < ratio < 18, ratio)
+                if level.time == "O(n log n)":
+                    self.assertTrue(4 < ratio < 6, ratio)
                 if level.best == "O(n)":
                     self.assertEqual(work(list(range(100))), 99)
 
