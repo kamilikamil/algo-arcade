@@ -27,12 +27,13 @@ class TestLevels(unittest.TestCase):
                 self.assertEqual(set(counts(level, steps)[-1]), set(level.counters))
 
     def test_growth_matches_the_level_labels(self):
-        # 4 times more items: an O(n²) level does about 16 times the compares on reversed input,
+        # 4 times more shuffled items: an O(n²) level does about 16 times the compares, an O(n log n) level about 5,
         # and a level labelled best O(n) does n - 1 compares on sorted input
         for number, name, level in levels():
             with self.subTest(level=name):
                 work = lambda data: counts(level, record(level.func, data)[0])[-1]["compares"]
-                ratio = work(list(range(400, 0, -1))) / work(list(range(100, 0, -1)))
+                shuffled = lambda n: random.Random(n).sample(range(n), n)
+                ratio = work(shuffled(400)) / work(shuffled(100))
                 if level.time == "O(n²)":
                     self.assertTrue(14 < ratio < 18, ratio)
                 if level.time == "O(n log n)":
