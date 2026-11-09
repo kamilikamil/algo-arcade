@@ -25,6 +25,10 @@ Python 3.8 or newer, nothing to install.
 | 5 | `quick_sort.py` | pick a pivot, move everything smaller to its left; the pivot is now final; repeat on both sides |
 | 6 | `heap_sort.py` | build a pyramid where every boss is taller than its two guards; the front boss is the tallest: send it to the end, repeat |
 | 7 | `binary_search.py` | search, not sort: in a sorted row, check the middle; too small means the whole left half is out; repeat (`python3 binary_search.py 21`) |
+| 8 | `bfs.py` | map: explore like a ripple with a queue; the first path found has the fewest steps |
+| 9 | `dfs.py` | map: the same with a stack; runs as deep as it can; finds a way, not the best way |
+| 10 | `dijkstra.py` | map: steps have a price (mud costs 5); always explore the cheapest room so far; cheapest path |
+| 11 | `a_star.py` | map: Dijkstra plus a guess of the distance left; same cheapest path, far fewer rooms explored |
 
 Every sorting level starts from the same row, `[8, 2, 5, 1, 3, 7, 4, 6]`, so you can compare the scores:
 
@@ -55,6 +59,18 @@ sorted or not, takes about the same work.
 
 Level 7, binary search, finds a value in a sorted row: 63 in the 16-number demo row takes 4 checks (one by one: 13),
 and a million sorted numbers take at most 20 checks (`test_levels.py` checks that).
+
+Levels 8 to 11 walk the same dungeon map (in `bfs.py`: `#` wall, `~` mud, `S` start, `T` treasure):
+
+| level | rooms explored | path steps | path cost |
+|---|---|---|---|
+| BFS | 62 | 12 | 32 (straight through the mud) |
+| DFS | 21 | 20 | 20 |
+| Dijkstra | 68 | 14 | 14 (around the mud) |
+| A* | 28 | 14 | 14 |
+
+`test_levels.py` checks every map level on 300 random dungeons: BFS always finds the fewest steps, Dijkstra and A*
+always the cheapest path.
 
 More levels are on the way.
 

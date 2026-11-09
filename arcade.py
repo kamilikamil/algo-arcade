@@ -15,6 +15,7 @@ import importlib
 import inspect
 import random
 import statistics
+from collections import deque
 import sys
 import time
 from dataclasses import dataclass, field
@@ -31,7 +32,8 @@ class Level:
     highlight  vars -> list of indexes being looked at right now (lit white).
     locked     (vars, n) -> list of indexes already in their final place (lit green).
     counters   name -> test on a stripped source line; the counter goes up each time such a line runs.
-    view       how the data is drawn: "towers" (a list of numbers). Graph and grid levels add their own view.
+    view       how the data is drawn: "towers" (a list of numbers), "corridor" (a search level) or "map" (a dungeon
+               map: demo is a list of strings, # wall, . floor, ~ mud, S start, T treasure; func(grid) returns the path).
     time, best, memory  how the work grows with n items, for developers (big O): running time, best case, extra memory.
     extra_memory        the same extra memory in plain words, for everyone ("none" or "+1 row").
     lists      names of list variables to record as well (for example the left and right copies of merge sort).
@@ -72,8 +74,8 @@ def record(func, data, lists=(), args=()):
             steps.append({
                 "line": frame.f_lineno - code.co_firstlineno,
                 "row": list(row),
-                "vars": {k: (list(v) if isinstance(v, list) else v) for k, v in loc.items()
-                         if isinstance(v, (int, bool)) or (k in lists and isinstance(v, list))},
+                "vars": {k: copy_value(v) for k, v in loc.items()
+                         if isinstance(v, (int, bool)) or is_room(v) or (k in lists and isinstance(v, WATCHED))},
                 "event": event,
             })
         return watch
@@ -84,6 +86,25 @@ def record(func, data, lists=(), args=()):
     finally:
         sys.settrace(None)
     return steps, result
+
+
+WATCHED = (list, tuple, set, dict, deque)
+
+
+def is_room(v):
+    """A (row, col) position on a map."""
+    return isinstance(v, tuple) and len(v) == 2 and all(isinstance(x, int) for x in v)
+
+
+def copy_value(v):
+    """A snapshot of a variable at this line, so later changes do not rewrite the past."""
+    if isinstance(v, (list, tuple, deque)):
+        return [copy_value(x) for x in v]
+    if isinstance(v, set):
+        return sorted(copy_value(x) for x in v)
+    if isinstance(v, dict):
+        return {k: copy_value(x) for k, x in v.items()}
+    return v
 
 
 def source_lines(func):
@@ -138,7 +159,31 @@ def level_find(level, step):
     return step["vars"].get("target", level.find)
 
 
-VIEWS = {"towers": draw_towers, "corridor": draw_corridor}
+def draw_map(level, lines, step, totals, hot, done):
+    """A map level: the dungeon from above. Seen rooms are lit, the room being explored is @."""
+    grid, v = step["row"], step["vars"]
+    seen = set(map(tuple, v.get("came_from", {}).keys())) if isinstance(v.get("came_from"), dict) else set()
+    path = set(map(tuple, step.get("path", [])))
+    here = v.get("room")
+    out = []
+    for r, text in enumerate(grid):
+        cells = []
+        for c, ch in enumerate(text):
+            if (r, c) in path:
+                cells.append(COLORS["locked"] + "██" + COLORS["off"])
+            elif (r, c) == here:
+                cells.append(COLORS["hot"] + "@@" + COLORS["off"])
+            elif ch == "#":
+                cells.append("\033[90m▓▓" + COLORS["off"])
+            elif (r, c) in seen:
+                cells.append(COLORS["tower"] + ("~~" if ch == "~" else ch * 2 if ch in "ST" else "░░") + COLORS["off"])
+            else:
+                cells.append("  " if ch == "." else ch * 2)
+        out.append("  " + "".join(cells))
+    return out
+
+
+VIEWS = {"towers": draw_towers, "corridor": draw_corridor, "map": draw_map}
 
 
 def frame(level, lines, step, totals, hot, done):
@@ -160,7 +205,9 @@ def play(level, args=None):
         k = args.index("--speed")
         speed = float(args[k + 1])
         del args[k:k + 2]
-    if level.find is None:
+    if level.view == "map":  # a map level: the dungeon in the level file
+        data, extra = level.demo, ()
+    elif level.find is None:
         data, extra = [int(x) for x in args] or level.demo, ()
     else:  # a search level: your number is the value to find, in the level's own sorted row
         data, extra = level.demo, (int(args[0]) if args else level.find,)
@@ -171,6 +218,10 @@ def play(level, args=None):
         frame(level, lines, s, t, set(level.highlight(s["vars"])), set(level.locked(s["vars"], len(data))))
         time.sleep(0.25 / speed)
     score = ", ".join(f"{n} {name}" for name, n in totals[-1].items())
+    if level.view == "map":
+        frame(level, lines, dict(steps[-1], path=result), totals[-1], set(), set())
+        print(f"\n  STAGE CLEAR   path of {len(result) - 1} steps, cost {path_cost(data, result)}   {score}\n")
+        return
     if level.find is not None:
         frame(level, lines, steps[-1], totals[-1], set(), {result} if result >= 0 else set())
         found = f"found {extra[0]} at spot {result}" if result >= 0 else f"{extra[0]} is not in the row"
@@ -179,6 +230,43 @@ def play(level, args=None):
     last = dict(steps[-1], row=list(result))
     frame(level, lines, last, totals[-1], set(), set(range(len(data))))
     print(f"\n  STAGE CLEAR   {data} -> {list(result)}   {score}\n")
+
+
+def find(grid, ch):
+    """The (row, col) of the first ch in the grid, for example the start S or the treasure T."""
+    for r, text in enumerate(grid):
+        if ch in text:
+            return (r, text.index(ch))
+    raise ValueError(f"no {ch} on the map")
+
+
+def neighbours(grid, room):
+    """The rooms you can step to from room: up, right, down, left, inside the map and not a wall."""
+    r, c = room
+    for nr, nc in ((r - 1, c), (r, c + 1), (r + 1, c), (r, c - 1)):
+        if 0 <= nr < len(grid) and 0 <= nc < len(grid[nr]) and grid[nr][nc] != "#":
+            yield (nr, nc)
+
+
+MUD = 5  # stepping into mud costs 5, any other room costs 1
+
+
+def step_cost(grid, room):
+    return MUD if grid[room[0]][room[1]] == "~" else 1
+
+
+def path_back(came_from, goal):
+    """Follow came_from from the goal back to the start, then turn it around. Empty if the goal was never reached."""
+    if goal not in came_from:
+        return []
+    path = [goal]
+    while came_from[path[-1]] is not None:
+        path.append(came_from[path[-1]])
+    return path[::-1]
+
+
+def path_cost(grid, path):
+    return sum(step_cost(grid, room) for room in path[1:])
 
 
 def race(level, n, runs=3, seed=42):
@@ -222,14 +310,14 @@ if __name__ == "__main__":
         n = int(sys.argv[sys.argv.index("--race") + 1])
         print(f"\n  RACE: sorting {n:,} shuffled numbers on this computer (median of 3 runs)\n")
         for number, name, level in levels():
-            if level.find is not None:  # search levels do not sort
+            if level.find is not None or level.view == "map":  # search and map levels do not sort
                 continue
             seconds = race(level, n)
             print(f"  {number:>2}  {level.title:<20} {seconds:8.3f} s   extra memory: {level.extra_memory}")
         print()
         sys.exit()
     print("\n  ALGO ARCADE levels:\n")
-    print(f"  {'':>2}  {'':<20} {'time':<11} {'best':<11} {'memory':<8}")
+    print(f"  {'':>2}  {'':<20} {'time':<17} {'best':<11} {'memory':<9}")
     for number, name, level in levels():
-        print(f"  {number:>2}  {level.title:<20} {level.time:<11} {level.best:<11} {level.memory:<8} python3 {name}")
+        print(f"  {number:>2}  {level.title:<20} {level.time:<17} {level.best:<11} {level.memory:<9} python3 {name}")
     print("\n  Race them on your computer: python3 arcade.py --race 10000\n")
