@@ -9,7 +9,7 @@ uses a small scripted stand-in, so you need no API key.
 
 | level | file | the idea in one line |
 |---|---|---|
-| 2-1 | `context_window.py` | THE BAG RULE: the model only sees what fits in its context window; when it is full, the oldest messages go first |
+| 2-1 | `context_window.py` | THE MEMORY PIPE: the model only sees what fits in its context window; when it is full, the oldest messages are pushed out first, unless you compact them |
 | 2-2 | `agent_loop.py` | THE NOTE SLOT: the model only writes tool calls; your code runs them, sends the result back, and its allow list says no |
 | 2-3 | `token_bucket.py` | THE COIN FOUNTAIN: a token bucket rate limiter, HTTP 429 and Retry-After, and retry code that waits the right time |
 

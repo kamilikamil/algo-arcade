@@ -11,23 +11,24 @@ class ContextWindow(unittest.TestCase):
         self.assertEqual(cw.count_tokens("hi"), 1)
         self.assertEqual(cw.count_tokens("my name is sam"), 4)
 
-    def test_plain_bag_drops_the_oldest(self):
+    def test_plain_drops_the_oldest(self):
         r = cw.level()["rounds"][0]["events"]
         self.assertEqual([e["text"] for e in r if e["event"] == "drop"], ["my name is sam"])
         self.assertEqual(r[-1]["text"], "?")
         self.assertTrue(all(e["used"] <= e["window"] for e in r if e["event"] != "add"))
 
-    def test_three_fixes_keep_the_name(self):
+    def test_compact_keeps_the_name(self):
         r = cw.level()["rounds"][1]["events"]
         self.assertFalse([e for e in r if e["event"] == "drop"])
+        self.assertEqual([e["event"] for e in r].count("compact"), 1)
         self.assertEqual(r[-1]["text"], "SAM")
         self.assertLessEqual(r[-1]["used"], r[-1]["window"])
 
     def test_pinned_never_dropped(self):
-        bag = cw.Bag(8, pinned=["my name is sam"])
+        win = cw.Window(8, pinned=["my name is sam"])
         for m in ["aaaaaaaa", "bbbbbbbb", "cccc"]:
-            bag.add(m)
-        self.assertEqual(cw.answer(bag, "?"), "SAM")
+            win.add(m)
+        self.assertEqual(cw.answer(win, "?"), "SAM")
 
 
 class AgentLoop(unittest.TestCase):
